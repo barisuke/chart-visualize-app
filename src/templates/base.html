@@ -65,13 +65,33 @@
 				};
 			*/
 				const accelerometer_x_data = Object.values(data["accelerometer_x"]);
-				console.log(typeof accelerometer_x_data)
-				console.log(accelerometer_x_data.slice(-1)[0]);
+				const accelerometer_y_data = Object.values(data["accelerometer_y"]);
+				const accelerometer_z_data = Object.values(data["accelerometer_z"]);
+
+
+				/*
 				chart.config.data.datasets.forEach(function(dataset) {
 					dataset.data.push({
 						x: Date.now(),
 						y: accelerometer_x_data.slice(-1)[0]
 					});
+				});
+				*/
+				let accelerometer_x_idx = 0;
+				let accelerometer_y_idx = 1;
+				let accelerometer_z_idx = 2;
+
+				chart.config.data.datasets[accelerometer_x_idx].data.push({
+					x: Date.now(),
+					y: accelerometer_x_data.slice(-1)[0]
+				});
+				chart.config.data.datasets[accelerometer_y_idx].data.push({
+					x: Date.now(),
+					y: accelerometer_y_data.slice(-1)[0]
+				});
+				chart.config.data.datasets[accelerometer_z_idx].data.push({
+					x: Date.now(),
+					y: accelerometer_z_data.slice(-1)[0]
 				});
 			}).fail(function() {
 				alert("失敗");
@@ -112,22 +132,32 @@
 		var config = {
 			type: 'line',
 			data: {
-				datasets: [{
-					label: 'Dataset 1 (linear interpolation)',
-					backgroundColor: color(chartColors.red).alpha(0.5).rgbString(),
-					borderColor: chartColors.red,
-					fill: false,
-					lineTension: 0,
-					borderDash: [8, 4],
-					data: []
-				}, {
-					label: 'Dataset 2 (cubic interpolation)',
-					backgroundColor: color(chartColors.blue).alpha(0.5).rgbString(),
-					borderColor: chartColors.blue,
-					fill: false,
-					cubicInterpolationMode: 'monotone',
-					data: []
-				}]
+				datasets: [
+					{
+						label: 'accelerometer_x (linear interpolation)',
+						backgroundColor: color(chartColors.red).alpha(0.5).rgbString(),
+						borderColor: chartColors.red,
+						fill: false,
+						lineTension: 0,
+						borderDash: [8, 4],
+						data: []
+					}, {
+						label: 'accelerometer_y (cubic interpolation)',
+						backgroundColor: color(chartColors.blue).alpha(0.5).rgbString(),
+						borderColor: chartColors.blue,
+						fill: false,
+						cubicInterpolationMode: 'monotone',
+						data: []
+					},
+					{
+						label: 'accelerometer_z (cubic interpolation)',
+						backgroundColor: color(chartColors.blue).alpha(0.5).rgbString(),
+						borderColor: chartColors.green,
+						fill: false,
+						cubicInterpolationMode: 'monotone',
+						data: []
+					}
+				]
 			},
 			options: {
 				title: {
