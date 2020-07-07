@@ -12,14 +12,26 @@
 	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@latest/dist/chartjs-plugin-streaming.min.js"></script>
     </head>
 <body>
-
+	<!--
 	<div class="container">
 		{% block content %}
 		{% endblock %}
 	</div>
-	　<div class="chart">
-		<canvas id="myChart"></canvas>
+	 -->
+
+	<h2>accelerometer</h2>
+	<div class="chart">
+		<canvas id="accChart"></canvas>
 	</div>
+	<h2>gyrometer</h2>
+	<div class="chart">
+		<canvas id="gyroChart"></canvas>
+	</div>
+	<h2>magnetometer</h2>
+	<div class="chart">
+		<canvas id="magnetoChart"></canvas>
+	</div>
+	<!--
 	<div>
 		<p class="text-center">
 			<button id="randomizeData">Randomize Data</button>
@@ -29,6 +41,7 @@
 			<button id="resetZoom">Reset Zoom</button>
 		</p>
 	</div>
+	-->
 
 	<script>
 		//jQuery処理の記述
@@ -68,6 +81,13 @@
 				const accelerometer_y_data = Object.values(data["accelerometer_y"]);
 				const accelerometer_z_data = Object.values(data["accelerometer_z"]);
 
+				const gyrometer_x_data = Object.values(data["gyrometer_x"]);
+				const gyrometer_y_data = Object.values(data["gyrometer_y"]);
+				const gyrometer_z_data = Object.values(data["gyrometer_z"]);
+
+				const magnetometer_x_data = Object.values(data["magnetometer_x"]);
+				const magnetometer_y_data = Object.values(data["magnetometer_y"]);
+				const magnetometer_z_data = Object.values(data["magnetometer_z"]);
 
 				/*
 				chart.config.data.datasets.forEach(function(dataset) {
@@ -80,19 +100,53 @@
 				let accelerometer_x_idx = 0;
 				let accelerometer_y_idx = 1;
 				let accelerometer_z_idx = 2;
+				let gyrometer_x_idx = 0;
+				let gyrometer_y_idx = 1;
+				let gyrometer_z_idx = 2;
+				let magnetometer_x_idx = 0;
+				let magnetometer_y_idx = 1;
+				let magnetometer_z_idx = 2;
 
-				chart.config.data.datasets[accelerometer_x_idx].data.push({
+				accChart.config.data.datasets[accelerometer_x_idx].data.push({
 					x: Date.now(),
 					y: accelerometer_x_data.slice(-1)[0]
 				});
-				chart.config.data.datasets[accelerometer_y_idx].data.push({
+				accChart.config.data.datasets[accelerometer_y_idx].data.push({
 					x: Date.now(),
 					y: accelerometer_y_data.slice(-1)[0]
 				});
-				chart.config.data.datasets[accelerometer_z_idx].data.push({
+				accChart.config.data.datasets[accelerometer_z_idx].data.push({
 					x: Date.now(),
 					y: accelerometer_z_data.slice(-1)[0]
 				});
+
+				gyroChart.config.data.datasets[gyrometer_x_idx].data.push({
+					x: Date.now(),
+					y: gyrometer_x_data.slice(-1)[0]
+				});
+				gyroChart.config.data.datasets[gyrometer_y_idx].data.push({
+					x: Date.now(),
+					y: gyrometer_y_data.slice(-1)[0]
+				});
+				gyroChart.config.data.datasets[gyrometer_z_idx].data.push({
+					x: Date.now(),
+					y: gyrometer_z_data.slice(-1)[0]
+				});
+
+				magnetoChart.config.data.datasets[magnetometer_x_idx].data.push({
+					x: Date.now(),
+					y: magnetometer_x_data.slice(-1)[0]
+				});
+				magnetoChart.config.data.datasets[magnetometer_y_idx].data.push({
+					x: Date.now(),
+					y: magnetometer_y_data.slice(-1)[0]
+				});
+				magnetoChart.config.data.datasets[magnetometer_z_idx].data.push({
+					x: Date.now(),
+					y: magnetometer_z_data.slice(-1)[0]
+				});
+
+
 			}).fail(function() {
 				alert("失敗");
 			});
@@ -162,10 +216,11 @@
 			options: {
 				title: {
 					display: true,
-					text: 'Zoom plugin sample'
+					text: 'stream accelerometer'
 				},
 				scales: {
 					xAxes: [{
+						stacked: false,
 						type: 'realtime',
 						realtime: {
 							duration: 20000,
@@ -175,6 +230,7 @@
 						}
 					}],
 					yAxes: [{
+						stacked: true,
 						type: 'linear',
 						display: true,
 						scaleLabel: {
@@ -213,11 +269,198 @@
 				}
 			}
 		};
+		var gyroConfig = {
+			type: 'line',
+			data: {
+				datasets: [
+					{
+						label: 'gyrometer_x (linear interpolation)',
+						backgroundColor: color(chartColors.red).alpha(0.5).rgbString(),
+						borderColor: chartColors.red,
+						fill: false,
+						lineTension: 0,
+						borderDash: [8, 4],
+						data: []
+					}, {
+						label: 'gyrometer_y (cubic interpolation)',
+						backgroundColor: color(chartColors.blue).alpha(0.5).rgbString(),
+						borderColor: chartColors.blue,
+						fill: false,
+						cubicInterpolationMode: 'monotone',
+						data: []
+					},
+					{
+						label: 'gyrometer_z (cubic interpolation)',
+						backgroundColor: color(chartColors.blue).alpha(0.5).rgbString(),
+						borderColor: chartColors.green,
+						fill: false,
+						cubicInterpolationMode: 'monotone',
+						data: []
+					}
+				]
+			},
+			options: {
+				title: {
+					display: true,
+					text: 'stream gyrometer'
+				},
+				scales: {
+					xAxes: [{
+						stacked: false,
+						type: 'realtime',
+						realtime: {
+							duration: 20000,
+							refresh: 500,
+							delay: 2000,
+							onRefresh: onRefresh
+						}
+					}],
+					yAxes: [{
+						stacked: false,
+						type: 'linear',
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: 'value'
+						}
 
-		window.onload = function() {
-			var ctx = document.getElementById('myChart').getContext('2d');
-			window.myChart = new Chart(ctx, config);
+					}]
+				},
+				tooltips: {
+					mode: 'nearest',
+					intersect: false
+				},
+				hover: {
+					mode: 'nearest',
+					intersect: false
+				},
+				pan: {
+					enabled: true,
+					mode: 'x',
+					rangeMax: {
+						x: 4000
+					},
+					rangeMin: {
+						x: 0
+					}
+				},
+				zoom: {
+					enabled: true,
+					mode: 'x',
+					rangeMax: {
+						x: 20000
+					},
+					rangeMin: {
+						x: 1000
+					}
+				}
+			}
 		};
+
+		var magnetoConfig = {
+			type: 'line',
+			data: {
+				datasets: [
+					{
+						label: 'magnetometer_x (linear interpolation)',
+						backgroundColor: color(chartColors.red).alpha(0.5).rgbString(),
+						borderColor: chartColors.red,
+						fill: false,
+						lineTension: 0,
+						borderDash: [8, 4],
+						data: []
+					}, {
+						label: 'magnetometer_y (cubic interpolation)',
+						backgroundColor: color(chartColors.blue).alpha(0.5).rgbString(),
+						borderColor: chartColors.blue,
+						fill: false,
+						cubicInterpolationMode: 'monotone',
+						data: []
+					},
+					{
+						label: 'magnetometer_z (cubic interpolation)',
+						backgroundColor: color(chartColors.blue).alpha(0.5).rgbString(),
+						borderColor: chartColors.green,
+						fill: false,
+						cubicInterpolationMode: 'monotone',
+						data: []
+					}
+				]
+			},
+			options: {
+				title: {
+					display: true,
+					text: 'stream magnetometer'
+				},
+				scales: {
+					xAxes: [{
+						stacked: false,
+						type: 'realtime',
+						realtime: {
+							duration: 20000,
+							refresh: 500,
+							delay: 2000,
+							onRefresh: onRefresh
+						}
+					}],
+					yAxes: [{
+						stacked: false,
+						type: 'linear',
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: 'value'
+						}
+
+					}]
+				},
+				tooltips: {
+					mode: 'nearest',
+					intersect: false
+				},
+				hover: {
+					mode: 'nearest',
+					intersect: false
+				},
+				pan: {
+					enabled: true,
+					mode: 'x',
+					rangeMax: {
+						x: 4000
+					},
+					rangeMin: {
+						x: 0
+					}
+				},
+				zoom: {
+					enabled: true,
+					mode: 'x',
+					rangeMax: {
+						x: 20000
+					},
+					rangeMin: {
+						x: 1000
+					}
+				}
+			}
+		};
+
+		// chartの画面の生成
+		window.onload = function() {
+			var ctx = document.getElementById('accChart').getContext('2d');
+			window.accChart = new Chart(ctx, config);
+
+			var gyroCtx = document.getElementById('gyroChart').getContext('2d');
+			window.gyroChart = new Chart(gyroCtx, gyroConfig);
+
+			var magnetoCtx = document.getElementById('magnetoChart').getContext('2d');
+			window.magnetoChart = new Chart(magnetoCtx, magnetoConfig);
+		};
+
+
+
+
+
 
 		document.getElementById('randomizeData').addEventListener('click', function() {
 			config.data.datasets.forEach(function(dataset) {
@@ -226,7 +469,7 @@
 				});
 			});
 
-			window.myChart.update();
+			window.accChart.update();
 		});
 
 		var colorNames = Object.keys(chartColors);
@@ -243,21 +486,21 @@
 			};
 
 			config.data.datasets.push(newDataset);
-			window.myChart.update();
+			window.accChart.update();
 		});
 
 		document.getElementById('removeDataset').addEventListener('click', function() {
 			config.data.datasets.pop();
-			window.myChart.update();
+			window.accChart.update();
 		});
 
 		document.getElementById('addData').addEventListener('click', function() {
-			onRefresh(window.myChart);
-			window.myChart.update();
+			onRefresh(window.accChart);
+			window.accChart.update();
 		});
 
 		document.getElementById('resetZoom').addEventListener('click', function() {
-			window.myChart.resetZoom();
+			window.accChart.resetZoom();
 		});
 
 	</script>
