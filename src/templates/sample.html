@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>センサーデータ可視化サンプル</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@1.8.0"></script>
+
+    </head>
+<body>
+<h1>aaa</h1>
+<script type="text/javascript">
+  
+
+
+var gconfig = {
+    'client_id': '549282183027-asmb2s3v396veogsp8crdot39mn8jukm.apps.googleusercontent.com',
+    'scope': 'https://www.googleapis.com/auth/bigquery'
+};
+
+$.ajax({
+    url : "https://apis.google.com/js/client.js",
+    dataType : "script",
+    success: function() {
+        function loadGAPI() {
+            setTimeout(function() {
+            if (!gapi.client) {
+                loadGAPI();
+            } else {
+                loadBigQuery();
+            }
+            }, 500);
+        }
+        
+        function loadBigQuery() {
+            gapi.client.load('bigquery', 'v2');
+            setTimeout(function() {
+            if (!gapi.client.bigquery) {
+                loadBigQuery();
+            } else {
+                onClientLoadHandler();
+            }
+            }, 500);
+        }
+        loadGAPI();
+   }
+});
+
+function runQuery() {
+    var request = gapi.client.bigquery.jobs.query({
+      'projectId': "kernel-mlops",
+      'timeoutMs': '30000',
+      'query': 'SELECT t0.accelerometer_x FROM `kernel-mlops.IMU.MbientlabSensor` AS t0 LIMIT 100;'
+    });
+    request.execute(function(response) {
+      var bqData = [];
+
+      response.result.rows.forEach(function(d) {
+        bqData.push({"date": d3.time.format("%Y-%m-%d").parse(d.f[0].v),
+          "total_orders": +d.f[1].v});
+      });
+      
+      drawLineChart(bqData);
+    });
+  }
+
+function drawLineChart(bqData) {
+  var WIDTH = config.width, HEIGHT = config.height;
+  var Y_AXIS_LABEL = "total_orders";
+  var X_DATA_PARSE = d3.time.format("%d-%b-%y").parse;
+  var Y_DATA_PARSE = vida.number;
+  var X_DATA_TICK = d3.time.format("%b-%y");
+  var X_AXIS_COLUMN = "date";
+  var Y_AXIS_COLUMN = "total_orders";
+  var margin = {top: 20, right: 20, bottom: 30, left: 50},
+      width = WIDTH - margin.left - margin.right,
+      height = HEIGHT - margin.top - margin.bottom;
+  var x = d3.time.scale()
+      .range([0, width]);
+    var y = d3.scale.linear()
+      .range([height, 0]);
+  var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom")
+      .tickFormat(X_DATA_TICK);
+  var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left")
+      .tickFormat(function(d) {
+        return d / 1000000 + "M";
+      });
+  var line = d3.svg.line()
+      .interpolate("basis")
+      .x(function(d) { return x(d.x_axis); })
+      .y(function(d) { return y(d.y_axis); });
+  
+  var svg = d3.select("#canvas-svg").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  
+  bqData.forEach(function(d) {
+    d.x_axis = d[X_AXIS_COLUMN];
+    d.y_axis = d[Y_AXIS_COLUMN];
+  });
+  
+  bqData.sort(function(a, b) {
+    return (new Date(a.x_axis)) - (new Date(b.x_axis));
+  });
+  
+  x.domain(d3.extent(bqData, function(d) { return d.x_axis; }));
+  y.domain(d3.extent(bqData, function(d) { return d.y_axis; }));
+  
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+  
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text(Y_AXIS_LABEL);
+  
+  svg.append("path")
+      .datum(bqData)
+      .attr("class", "line")
+      .attr("d", line);
+  
+  }
+
+</script>
+</body>
+</html>

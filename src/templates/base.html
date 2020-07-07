@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>センサーデータ可視化サンプル</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/min/moment.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@0.6.0"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@latest/dist/chartjs-plugin-streaming.min.js"></script>
+    </head>
+<body>
+
+	<div class="container">
+		{% block content %}
+		{% endblock %}
+	</div>
+	　<div class="chart">
+		<canvas id="myChart"></canvas>
+	</div>
+	<div>
+		<p class="text-center">
+			<button id="randomizeData">Randomize Data</button>
+			<button id="addDataset">Add Dataset</button>
+			<button id="removeDataset">Remove Dataset</button>
+			<button id="addData">Add Data</button>
+			<button id="resetZoom">Reset Zoom</button>
+		</p>
+	</div>
+
+	<script>
+		//jQuery処理の記述
+
+			//ajax通信を実装
+		function ajaxBigQuery() {
+			return $.ajax({
+				type: 'get',
+				url: 'http://0.0.0.0:5000/api',
+				dataType:"json" //必須!これがないとundefined
+			})
+		}
+		var chartColors = {
+			red: 'rgb(255, 99, 132)',
+			orange: 'rgb(255, 159, 64)',
+			yellow: 'rgb(255, 205, 86)',
+			green: 'rgb(75, 192, 192)',
+			blue: 'rgb(54, 162, 235)',
+			purple: 'rgb(153, 102, 255)',
+			grey: 'rgb(201, 203, 207)'
+		};
+
+		function randomScalingFactor() {
+			return (Math.random() > 0.5 ? 1.0 : -1.0) * Math.round(Math.random() * 100);
+		}
+
+		function onRefresh(chart) {
+			//var eachDataObj = {};
+
+			ajaxBigQuery().done(function(data) {
+			/*
+				for (const key in data) {
+					eachDataObj[key] = Object.values(data[key]);
+				};
+			*/
+				const accelerometer_x_data = Object.values(data["accelerometer_x"]);
+				console.log(typeof accelerometer_x_data)
+				console.log(accelerometer_x_data.slice(-1)[0]);
+				chart.config.data.datasets.forEach(function(dataset) {
+					dataset.data.push({
+						x: Date.now(),
+						y: accelerometer_x_data.slice(-1)[0]
+					});
+				});
+			}).fail(function() {
+				alert("失敗");
+			});
+			/*
+			var each_data = {
+				"device_id" : [],
+				"time" : [],
+				"left_right" : [],
+				"accelerometer_x" : [],
+				"accelerometer_y" : [],
+				"accelerometer_z" : [],
+				"gyrometer_x" : [],
+				"gyrometer_y" : [],
+				"gyrometer_z" : [],
+				"magnetometer_x" : [],
+				"magnetometer_y" : [],
+				"magnetometer_z" : [],
+			};
+			/*
+			for (i = 0; i < bq_data["time"].length; i++) {
+				each_data["device_id"].push(bq_data["device_id"][i]);
+				each_data["time"].push(bq_data["time"][i]);
+				each_data["left_right"].push(bq_data["left_right"][i]);
+				each_data["accelerometer_x"].push(bq_data["accelerometer_x"][i]);
+				each_data["accelerometer_z"].push(bq_data["accelerometer_z"][i]);
+				each_data["gyrometer_x"].push(bq_data["gyrometer_x"][i]);
+				each_data["gyrometer_y"].push(bq_data["gyrometer_y"][i]);
+				each_data["gyrometer_z"].push(bq_data["gyrometer_z"][i]);
+				each_data["magnetometer_x"].push(bq_data["magnetometer_x"][i]);
+				each_data["magnetometer_y"].push(bq_data["magnetometer_y"][i]);
+				each_data["magnetometer_z"].push(bq_data["magnetometer_z"][i]);
+			}
+			*/
+		}
+
+		var color = Chart.helpers.color;
+		var config = {
+			type: 'line',
+			data: {
+				datasets: [{
+					label: 'Dataset 1 (linear interpolation)',
+					backgroundColor: color(chartColors.red).alpha(0.5).rgbString(),
+					borderColor: chartColors.red,
+					fill: false,
+					lineTension: 0,
+					borderDash: [8, 4],
+					data: []
+				}, {
+					label: 'Dataset 2 (cubic interpolation)',
+					backgroundColor: color(chartColors.blue).alpha(0.5).rgbString(),
+					borderColor: chartColors.blue,
+					fill: false,
+					cubicInterpolationMode: 'monotone',
+					data: []
+				}]
+			},
+			options: {
+				title: {
+					display: true,
+					text: 'Zoom plugin sample'
+				},
+				scales: {
+					xAxes: [{
+						type: 'realtime',
+						realtime: {
+							duration: 20000,
+							refresh: 500,
+							delay: 2000,
+							onRefresh: onRefresh
+						}
+					}],
+					yAxes: [{
+						type: 'linear',
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: 'value'
+						}
+					}]
+				},
+				tooltips: {
+					mode: 'nearest',
+					intersect: false
+				},
+				hover: {
+					mode: 'nearest',
+					intersect: false
+				},
+				pan: {
+					enabled: true,
+					mode: 'x',
+					rangeMax: {
+						x: 4000
+					},
+					rangeMin: {
+						x: 0
+					}
+				},
+				zoom: {
+					enabled: true,
+					mode: 'x',
+					rangeMax: {
+						x: 20000
+					},
+					rangeMin: {
+						x: 1000
+					}
+				}
+			}
+		};
+
+		window.onload = function() {
+			var ctx = document.getElementById('myChart').getContext('2d');
+			window.myChart = new Chart(ctx, config);
+		};
+
+		document.getElementById('randomizeData').addEventListener('click', function() {
+			config.data.datasets.forEach(function(dataset) {
+				dataset.data.forEach(function(dataObj) {
+					dataObj.y = randomScalingFactor();
+				});
+			});
+
+			window.myChart.update();
+		});
+
+		var colorNames = Object.keys(chartColors);
+		document.getElementById('addDataset').addEventListener('click', function() {
+			var colorName = colorNames[config.data.datasets.length % colorNames.length];
+			var newColor = chartColors[colorName];
+			var newDataset = {
+				label: 'Dataset ' + (config.data.datasets.length + 1),
+				backgroundColor: color(newColor).alpha(0.5).rgbString(),
+				borderColor: newColor,
+				fill: false,
+				lineTension: 0,
+				data: []
+			};
+
+			config.data.datasets.push(newDataset);
+			window.myChart.update();
+		});
+
+		document.getElementById('removeDataset').addEventListener('click', function() {
+			config.data.datasets.pop();
+			window.myChart.update();
+		});
+
+		document.getElementById('addData').addEventListener('click', function() {
+			onRefresh(window.myChart);
+			window.myChart.update();
+		});
+
+		document.getElementById('resetZoom').addEventListener('click', function() {
+			window.myChart.resetZoom();
+		});
+
+	</script>
+</body>
+</html>
+

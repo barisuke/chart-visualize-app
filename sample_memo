@@ -1,0 +1,11 @@
+$python3 data_sender.py\
+  --registry_id=my-registry\
+  --project_id=kernel-mlops\
+  --device_id=my-device\
+  --message_type=event\
+  --algorithm=RS256\
+  --private_key_file=./rsa_private.pem\
+  --cloud_region=asia-east1\
+  --id=002\
+  --location_logitude=0.0\
+  --location_latitude=0.0
